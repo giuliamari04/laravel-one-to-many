@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 
 use App\Models\Post;
+use App\Models\Category;
 use App\Http\Requests\StorePostRequest;
 use App\Http\Requests\UpdatePostRequest;
 
@@ -28,7 +29,8 @@ class PostController extends Controller
      */
     public function create()
     {
-        return view('admin.posts.create');
+        $categories = Category::all();
+        return view('admin.posts.create', compact('categories'));
     }
 
     /**
@@ -39,8 +41,11 @@ class PostController extends Controller
 
         $formData = $request->validated();
         //CREATE SLUG
-        $slug = Str::slug($formData['title'], '-');
-        //add slug to formData
+        // $slug = Post::getSlug($formData['title']);
+        // //add slug to formData
+        // $formData['slug'] = $slug;
+
+        $slug = Str::slug($formData['title']);
         $formData['slug'] = $slug;
         //prendiamo l'id dell'utente loggato
         $userId = Auth::id();
@@ -48,14 +53,12 @@ class PostController extends Controller
         //aggiungiamo l'id dell'utente
         $formData['user_id'] = $userId;
         if ($request->hasFile('image')) {
-            $path = Storage::put('images', $request->image);
+            $path = Storage::put('images', $formData['image']);
             $formData['image'] = $path;
         }
         $post = Post::create($formData);
-        //dd($path);
-        return redirect()->route('admin.posts.show', $post->id);
+        return redirect()->route('admin.posts.show', $post->slug);
     }
-
 
     /**
      * Display the specified resource.
@@ -70,7 +73,8 @@ class PostController extends Controller
      */
     public function edit(Post $post)
     {
-        return view('admin.posts.edit', compact('post'));
+        $categories = Category::all();
+        return view('admin.posts.edit', compact('post', 'categories'));
     }
 
     /**
@@ -79,10 +83,15 @@ class PostController extends Controller
     public function update(UpdatePostRequest $request, Post $post)
     {
         $formData = $request->validated();
-        //CREATE SLUG
-        $slug = Str::slug($formData['title'], '-');
-        //add slug to formData
-        $formData['slug'] = $slug;
+        $formData['slug'] = $post->slug;
+        if ($post->title !== $formData['title']) {
+            //CREATE SLUG
+        //    $slug = Post::getSlug($formData['title']);
+        //     $formData['slug'] = $slug;
+
+            $slug = Str::slug($formData['title']);
+            $formData['slug'] = $slug;
+        }
 
         //aggiungiamo l'id dell'utente proprietario del post
         $formData['user_id'] = $post->user_id;
@@ -91,11 +100,11 @@ class PostController extends Controller
                 Storage::delete($post->image);
             }
 
-            $path = Storage::put('images', $request->image);
+            $path = Storage::put('images', $formData['image']);
             $formData['image'] = $path;
         }
         $post->update($formData);
-        return redirect()->route('admin.posts.show', $post->id);
+        return redirect()->route('admin.posts.show', $post->slug);
     }
 
     /**
