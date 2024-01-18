@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layouts.admin')
 @section('content')
     <section class="container">
         <h1>Post Create</h1>
@@ -12,6 +12,18 @@
                 <div class="invalid-feedback">{{ $message }}</div>
             @enderror
     </div>
+<div class="mb-3">
+            <label for="category_id">Select Category</label>
+            <select class="form-control @error('category_id') is-invalid @enderror" name="category_id" id="category_id">
+                <option value="">Select a category</option>
+                @foreach ($categories as $category)
+                    <option value="{{ $category->id }}" {{ old('category_id') == $category->id ? 'selected' : '' }}>{{ $category->name }}</option>
+                @endforeach
+            </select>
+            @error('category_id')
+                <div class="invalid-feedback">{{ $message }}</div>
+            @enderror
+    </div>
 
     <div class="mb-3">
         <label for="body">Body</label>
@@ -21,7 +33,6 @@
             <div class="invalid-feedback">{{ $message }}</div>
         @enderror
     </div>
-
     <div class="d-flex">
         <div class="me-3">
             <img id="uploadPreview" width="100" src="https://via.placeholder.com/300x200">
